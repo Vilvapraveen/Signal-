@@ -1,0 +1,51 @@
+body {
+  margin: 0;
+  background: #111;
+  color: white;
+  text-align: center;
+  font-family: Arial;
+}
+
+h1 {
+  margin-top: 40px;
+}
+
+.box {
+  width: 120px;
+  margin: 30px auto;
+  background: black;
+  padding: 15px;
+  border-radius: 10px;
+}
+
+.light {
+  width: 90px;
+  height: 90px;
+  margin: 15px auto;
+  border-radius: 50%;
+  background: grey;
+  transition: 0.3s;
+}
+
+.red.on {
+  background: red;
+  box-shadow: 0 0 20px red;
+}
+
+.yellow.on {
+  background: yellow;
+  box-shadow: 0 0 20px yellow;
+}
+
+.green.on {
+  background: green;
+  box-shadow: 0 0 20px green;
+}
+
+.buttons button {
+  margin: 10px;
+  padding: 10px 15px;
+  border: none;
+  cursor: pointer;
+  border-radius: 5px;
+}
