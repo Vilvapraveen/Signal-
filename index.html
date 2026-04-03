@@ -2,33 +2,33 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Realistic Candle (Working)</title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Real Candle PRO</title>
 <style>
-  body{margin:0;height:100vh;display:flex;align-items:center;justify-content:center;background:#000}
-  .wrap{position:relative}
-  .candle{position:relative;width:70px;height:200px;background:linear-gradient(#fff,#e6e6e6);border-radius:14px;overflow:hidden}
-  .wax{position:absolute;bottom:0;width:100%;height:100%;background:linear-gradient(#fff,#ddd);transition:height 1s linear}
-  .wick{position:absolute;top:-18px;left:50%;width:4px;height:18px;background:#000;transform:translateX(-50%)}
-  .flame{position:absolute;top:-70px;left:50%;width:28px;height:55px;border-radius:50%;transform:translateX(-50%);
-    background:radial-gradient(circle at 50% 30%, #fff 0%, #ffe066 25%, #ff9f1c 55%, rgba(255,0,0,0.2) 75%, transparent 80%);
-    animation:flicker .12s infinite ease-in-out; filter:blur(.6px)}
-  .glow{position:absolute;top:-95px;left:50%;width:140px;height:140px;transform:translateX(-50%);
-    background:radial-gradient(circle, rgba(255,200,0,.5), transparent 65%);filter:blur(20px)}
-  .shadow{position:absolute;bottom:-18px;left:50%;width:120px;height:24px;transform:translateX(-50%);
-    background:rgba(0,0,0,.7);border-radius:50%;filter:blur(12px)}
-  @keyframes flicker{0%{transform:translateX(-50%) scale(1)}50%{transform:translateX(-50%) scale(1.15)}100%{transform:translateX(-50%) scale(1)}}
-  .drip{position:absolute;width:10px;height:18px;background:#eee;border-radius:50%;opacity:.95;animation:fall linear forwards}
-  @keyframes fall{from{transform:translateY(0);opacity:1}to{transform:translateY(150px);opacity:0}}
-  .controls{position:fixed;bottom:16px;left:50%;transform:translateX(-50%);display:flex;gap:10px}
-  button{padding:10px 14px;border:none;border-radius:10px;background:#ff9f1c;color:#000;font-weight:700}
+body{margin:0;height:100vh;background:#000;display:flex;align-items:center;justify-content:center;font-family:sans-serif}
+.scene{position:relative}
+.candle{position:relative;width:80px;height:220px;background:linear-gradient(#fff,#ddd);border-radius:16px;overflow:hidden}
+.waxTop{position:absolute;top:0;width:100%;height:100%;background:linear-gradient(#fff,#eee);transition:height 1s linear}
+.wick{position:absolute;top:-18px;left:50%;width:4px;height:18px;background:#000;transform:translateX(-50%)}
+.flame{position:absolute;top:-80px;left:50%;width:30px;height:60px;transform:translateX(-50%);
+background:radial-gradient(circle at 50% 20%, #fff 0%, #ffe066 25%, #ff9f1c 55%, rgba(255,0,0,0.2) 75%, transparent 85%);
+border-radius:50%;animation:flicker .1s infinite}
+.glow{position:absolute;top:-110px;left:50%;width:180px;height:180px;transform:translateX(-50%);
+background:radial-gradient(circle, rgba(255,180,0,.6), transparent 70%);filter:blur(25px)}
+.shadow{position:absolute;bottom:-20px;left:50%;width:140px;height:30px;transform:translateX(-50%);
+background:rgba(0,0,0,.8);border-radius:50%;filter:blur(15px)}
+@keyframes flicker{0%{transform:translateX(-50%) scale(1)}50%{transform:translateX(-50%) scale(1.2)}100%{transform:translateX(-50%) scale(1)}}
+.drip{position:absolute;width:12px;height:22px;background:#eee;border-radius:50%;animation:fall linear forwards}
+@keyframes fall{from{transform:translateY(0)}to{transform:translateY(170px);opacity:0}}
+.controls{position:fixed;bottom:20px;display:flex;gap:10px}
+button{padding:10px 15px;border:none;border-radius:10px;background:#ff9800;color:#000;font-weight:bold}
 </style>
 </head>
 <body>
 
-<div class="wrap">
+<div class="scene">
   <div class="candle" id="candle">
-    <div class="wax" id="wax"></div>
+    <div class="waxTop" id="wax"></div>
     <div class="wick"></div>
     <div class="glow"></div>
     <div class="flame" id="flame"></div>
@@ -37,84 +37,60 @@
 </div>
 
 <div class="controls">
-  <button onclick="enableMotion()">Enable Motion</button>
-  <button onclick="enableMic()">Enable Blow</button>
-  <button onclick="resetCandle()">Reset</button>
+  <button onclick="start()">Start 🔥</button>
+  <button onclick="blow()">Blow 💨</button>
+  <button onclick="reset()">Reset 🔁</button>
 </div>
 
 <script>
-const wax = document.getElementById('wax');
-const flame = document.getElementById('flame');
-const candle = document.getElementById('candle');
+const wax=document.getElementById('wax');
+const flame=document.getElementById('flame');
+const candle=document.getElementById('candle');
 
-let TOTAL = 600; // 10 mins
-let t = TOTAL;
-let running = true;
+let total=600; // 10 min
+let t=total;
+let running=false;
+
+function start(){ if(!running){ running=true; loop(); }}
 
 function loop(){
   if(!running) return;
   if(t<=0){ flame.style.display='none'; return; }
+
   t--;
-  const p = t / TOTAL; // 1 -> 0
-  wax.style.height = (p*100) + '%';
+  let p=t/total;
+  wax.style.height=(p*100)+'%';
 
-  // drip probability increases over time
-  const stage = 1 - p;
-  if(Math.random() < Math.min(0.8, stage + 0.1)) createDrip(stage);
+  // realistic drip stages
+  let stage=1-p;
+  if(Math.random()<stage){ createDrip(stage); }
 
-  setTimeout(loop, 1000);
+  // flame shrink near end
+  flame.style.transform=`translateX(-50%) scale(${0.8+ p*0.4})`;
+
+  setTimeout(loop,1000);
 }
 
 function createDrip(stage){
-  const d = document.createElement('div');
+  let d=document.createElement('div');
   d.className='drip';
-  d.style.left = (Math.random()*60+10) + '%';
-  d.style.top = '18px';
-  d.style.animationDuration = (2 - stage) + 's';
+  d.style.left=(Math.random()*60+10)+'%';
+  d.style.top='20px';
+  d.style.animationDuration=(2-stage)+'s';
   candle.appendChild(d);
-  setTimeout(()=>d.remove(), 2500);
+  setTimeout(()=>d.remove(),2500);
 }
 
-// --- Motion (safe enable) ---
-function enableMotion(){
-  try{
-    if(typeof DeviceMotionEvent !== 'undefined' && typeof DeviceMotionEvent.requestPermission === 'function'){
-      DeviceMotionEvent.requestPermission().then(p=>{ if(p==='granted') startMotion(); });
-    } else { startMotion(); }
-  }catch(e){ startMotion(); }
-}
-function startMotion(){
-  window.addEventListener('devicemotion', (e)=>{
-    const x = (e.accelerationIncludingGravity?.x)||0;
-    flame.style.transform = `translateX(-50%) rotate(${x*5}deg)`;
-  });
+function blow(){
+  flame.style.display='none';
 }
 
-// --- Mic blow (safe enable) ---
-let micStarted = false;
-function enableMic(){
-  if(micStarted) return; micStarted = true;
-  navigator.mediaDevices.getUserMedia({audio:true}).then(stream=>{
-    const ctx = new (window.AudioContext||window.webkitAudioContext)();
-    const src = ctx.createMediaStreamSource(stream);
-    const an = ctx.createAnalyser();
-    src.connect(an);
-    const data = new Uint8Array(an.frequencyBinCount);
-    function tick(){
-      an.getByteFrequencyData(data);
-      const vol = data.reduce((a,b)=>a+b,0)/data.length;
-      if(vol > 65){ flame.style.display='none'; }
-      requestAnimationFrame(tick);
-    }
-    tick();
-  }).catch(()=>{ console.log('Mic denied'); });
+function reset(){
+  t=total;
+  running=false;
+  wax.style.height='100%';
+  flame.style.display='block';
 }
-
-function resetCandle(){
-  t = TOTAL; running = true; wax.style.height='100%'; flame.style.display='block';
-}
-
-loop();
 </script>
 
 </body>
