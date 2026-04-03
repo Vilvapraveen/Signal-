@@ -2,277 +2,143 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>City Train Game PRO</title>
+<title>Cinematic Train System</title>
 
 <style>
 body {
   margin:0;
-  background:#0a0a0a;
   overflow:hidden;
-  font-family:sans-serif;
-  color:white;
+  background:linear-gradient(#0f2027,#000);
 }
 
-/* HUD */
-.hud {
-  position:absolute;
-  top:10px;
-  left:10px;
-  font-size:18px;
-}
-
-/* GAME OVER UI */
-.gameover {
-  position:absolute;
-  top:40%;
+/* CAMERA */
+.scene {
   width:100%;
-  text-align:center;
-  font-size:40px;
-  display:none;
+  height:100vh;
+  transform:rotateX(65deg);
+  animation: cam 8s infinite alternate ease-in-out;
 }
 
-/* BUTTON */
-button {
-  padding:10px 20px;
-  margin-top:20px;
-  font-size:18px;
-  cursor:pointer;
+@keyframes cam {
+  from { transform: rotateX(65deg) translateX(-20px); }
+  to { transform: rotateX(65deg) translateX(20px); }
 }
-
-/* CITY */
-.city-bg {
-  position:absolute;
-  width:100%;
-  height:100%;
-  background:linear-gradient(#111, #000);
-}
-
-/* BUILDINGS */
-.building {
-  position:absolute;
-  bottom:120px;
-  width:60px;
-  background:#222;
-}
-
-.b1 { height:150px; left:10%; }
-.b2 { height:200px; left:25%; }
-.b3 { height:180px; left:50%; }
-.b4 { height:220px; left:75%; }
 
 /* TRACK */
 .track {
   position:absolute;
-  width:100%;
-  height:6px;
+  width:200%;
+  height:8px;
   background:#555;
-}
-
-.t1 { top:35%; }
-.t2 { top:50%; }
-.t3 { top:65%; }
-
-/* STATION */
-.station {
-  position:absolute;
-  width:30px;
-  height:30px;
-  background:#00e5ff;
-  border-radius:50%;
-  top:-12px;
+  top:50%;
+  left:-50%;
 }
 
 /* TRAIN */
 .train {
   position:absolute;
-  width:70px;
-  height:25px;
-  border-radius:4px;
+  width:180px;
+  height:40px;
+  border-radius:6px;
+  background:linear-gradient(red,#550000);
+  top:50%;
+  left:-200px;
+  box-shadow:0 0 20px red;
 }
 
-.red { background:red; }
-.blue { background:blue; }
-.green { background:lime; }
+/* LIGHT EFFECT */
+.train::after {
+  content:"";
+  position:absolute;
+  width:100px;
+  height:100%;
+  right:-100px;
+  background:linear-gradient(to right, rgba(255,0,0,0.5), transparent);
+}
+
+/* CITY LIGHTS */
+.city {
+  position:absolute;
+  width:100%;
+  height:100%;
+  background:
+    radial-gradient(circle at 20% 80%, #222 20%, transparent 21%),
+    radial-gradient(circle at 50% 80%, #222 20%, transparent 21%),
+    radial-gradient(circle at 80% 80%, #222 20%, transparent 21%);
+}
 
 /* SIGNAL */
 .signal {
   position:absolute;
-  right:50px;
-  top:20px;
+  right:100px;
+  top:40%;
 }
 
 .light {
-  width:30px;
-  height:30px;
+  width:40px;
+  height:40px;
   border-radius:50%;
-  margin:5px;
+  margin:10px;
   background:#333;
 }
 
-.active.red { background:red; }
-.active.green { background:lime; }
+.red.active { background:red; box-shadow:0 0 20px red; }
+.green.active { background:lime; box-shadow:0 0 20px lime; }
 
 </style>
 </head>
 
 <body>
 
-<div class="city-bg"></div>
+<div class="scene">
+  <div class="city"></div>
+  <div class="track"></div>
 
-<div class="building b1"></div>
-<div class="building b2"></div>
-<div class="building b3"></div>
-<div class="building b4"></div>
+  <div id="train" class="train"></div>
 
-<div class="hud">
-  Score: <span id="score">0</span> |
-  Level: <span id="level">1</span>
+  <div class="signal">
+    <div id="red" class="light red"></div>
+    <div id="green" class="light green"></div>
+  </div>
 </div>
-
-<div class="gameover" id="gameover">
-  💥 GAME OVER <br>
-  <button onclick="restart()">Restart</button>
-</div>
-
-<div class="signal">
-  <div id="red" class="light red"></div>
-  <div id="green" class="light green active"></div>
-</div>
-
-<div class="track t1" id="track1"></div>
-<div class="track t2" id="track2"></div>
-<div class="track t3" id="track3"></div>
 
 <script>
 
-/* SOUND */
-const crashSound = new Audio("https://www.soundjay.com/mechanical/sounds/crash-01.mp3");
-
-/* ELEMENTS */
-const tracks = [
-  document.getElementById("track1"),
-  document.getElementById("track2"),
-  document.getElementById("track3")
-];
-
+const train = document.getElementById("train");
 const red = document.getElementById("red");
 const green = document.getElementById("green");
-const scoreEl = document.getElementById("score");
-const levelEl = document.getElementById("level");
-const gameoverUI = document.getElementById("gameover");
 
-let signalStop = false;
-let score = 0;
-let level = 1;
-let gameRunning = true;
+let speed = 6;
 
-/* STATIONS */
-const stations = [20,40,60,80];
-
-/* CREATE STATIONS */
-tracks.forEach(track=>{
-  stations.forEach(pos=>{
-    const s = document.createElement("div");
-    s.className="station";
-    s.style.left=pos+"%";
-    track.appendChild(s);
-  });
-});
-
-/* TRAINS */
-const trains = [];
-
-tracks.forEach((track,i)=>{
-  const t = document.createElement("div");
-  t.className="train " + ["red","blue","green"][i];
-  track.appendChild(t);
-
-  trains.push({
-    el:t,
-    x:0,
-    speed:0.2 + i*0.1,
-    wait:false
-  });
-});
-
-/* SIGNAL CONTROL */
-document.addEventListener("keydown", e=>{
-  if(e.code==="Space"){
-    signalStop = !signalStop;
-    red.classList.toggle("active", signalStop);
-    green.classList.toggle("active", !signalStop);
-  }
-});
-
-/* COLLISION */
-function checkCollision(){
-  for(let i=0;i<trains.length;i++){
-    for(let j=i+1;j<trains.length;j++){
-      if(Math.abs(trains[i].x - trains[j].x) < 5){
-        endGame();
-      }
-    }
-  }
+/* SIGNAL */
+function setSignal(stop){
+  red.classList.toggle("active", stop);
+  green.classList.toggle("active", !stop);
 }
 
-/* GAME OVER */
-function endGame(){
-  gameRunning = false;
-  crashSound.play();
-  gameoverUI.style.display = "block";
+/* TRAIN LOOP */
+function run(){
+
+  setSignal(true);
+
+  setTimeout(()=>{
+    train.style.transition = "left "+speed+"s linear";
+    train.style.left = "120%";
+  },1000);
+
+  setTimeout(()=>{
+    setSignal(false);
+  }, speed*1000);
+
+  setTimeout(()=>{
+    train.style.transition = "none";
+    train.style.left = "-200px";
+    speed *= 0.95; // faster each loop
+    run();
+  }, (speed+2)*1000);
 }
 
-/* RESTART */
-function restart(){
-  location.reload();
-}
-
-/* LOOP */
-function loop(){
-
-  if(!gameRunning) return;
-
-  trains.forEach(train=>{
-
-    if(signalStop) return;
-
-    if(!train.wait){
-      train.x += train.speed;
-      train.el.style.left = train.x + "%";
-    }
-
-    stations.forEach(pos=>{
-      if(Math.abs(train.x - pos) < 1 && !train.wait){
-        train.wait = true;
-
-        setTimeout(()=>{
-          train.wait = false;
-
-          score++;
-          scoreEl.innerText = score;
-
-          /* LEVEL UP */
-          if(score % 10 === 0){
-            level++;
-            levelEl.innerText = level;
-
-            trains.forEach(t=> t.speed += 0.05);
-          }
-
-        },1000);
-      }
-    });
-
-    if(train.x > 100) train.x = 0;
-
-  });
-
-  checkCollision();
-
-  requestAnimationFrame(loop);
-}
-
-loop();
+run();
 
 </script>
 
