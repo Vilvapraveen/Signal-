@@ -3,60 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <title>Traffic Signal System</title>
-
-  <style>
-    body {
-      margin: 0;
-      background: #111;
-      color: white;
-      text-align: center;
-      font-family: Arial;
-    }
-
-    h1 {
-      margin-top: 40px;
-    }
-
-    .box {
-      width: 120px;
-      margin: 30px auto;
-      background: black;
-      padding: 15px;
-      border-radius: 10px;
-    }
-
-    .light {
-      width: 90px;
-      height: 90px;
-      margin: 15px auto;
-      border-radius: 50%;
-      background: grey;
-      transition: 0.3s;
-    }
-
-    .red.on {
-      background: red;
-      box-shadow: 0 0 20px red;
-    }
-
-    .yellow.on {
-      background: yellow;
-      box-shadow: 0 0 20px yellow;
-    }
-
-    .green.on {
-      background: green;
-      box-shadow: 0 0 20px green;
-    }
-
-    .buttons button {
-      margin: 10px;
-      padding: 10px 15px;
-      border: none;
-      cursor: pointer;
-      border-radius: 5px;
-    }
-  </style>
+  <link rel="stylesheet" href="style.css">
 </head>
 
 <body>
@@ -78,65 +25,6 @@
     <button onclick="setLight('green')">Green</button>
   </div>
 
-  <script>
-    let current = "red";
-    let time = 5;
-    let countdown;
-
-    function updateUI() {
-      document.getElementById("red").classList.remove("on");
-      document.getElementById("yellow").classList.remove("on");
-      document.getElementById("green").classList.remove("on");
-
-      document.getElementById(current).classList.add("on");
-      document.getElementById("status").innerText = current.toUpperCase();
-      document.getElementById("timer").innerText = "Time Left: " + time + "s";
-    }
-
-    function nextLight() {
-      if (current === "red") {
-        current = "green";
-        time = 4;
-      } else if (current === "green") {
-        current = "yellow";
-        time = 2;
-      } else {
-        current = "red";
-        time = 5;
-      }
-
-      startCycle();
-    }
-
-    function startCycle() {
-      clearInterval(countdown);
-
-      updateUI();
-
-      countdown = setInterval(() => {
-        time--;
-        updateUI();
-
-        if (time === 0) {
-          clearInterval(countdown);
-          nextLight();
-        }
-      }, 1000);
-    }
-
-    function setLight(color) {
-      current = color;
-
-      if (color === "red") time = 5;
-      else if (color === "green") time = 4;
-      else time = 2;
-
-      startCycle();
-    }
-
-    // start automatically
-    startCycle();
-  </script>
-
+  <script src="script.js"></script>
 </body>
 </html>
