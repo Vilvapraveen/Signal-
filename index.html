@@ -2,7 +2,7 @@
 <html>
 <head>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Real Candle</title>
+<title>Real Candle Pro</title>
 
 <style>
 body{
@@ -11,15 +11,16 @@ body{
   display:flex;
   justify-content:center;
   align-items:center;
-  background:#000;
+  background: radial-gradient(circle,#111,#000);
+  overflow:hidden;
 }
 
 .candle{
   position:relative;
-  width:70px;
-  height:200px;
-  background:#eee;
-  border-radius:12px;
+  width:80px;
+  height:220px;
+  background:linear-gradient(#fff,#ddd);
+  border-radius:16px;
   overflow:hidden;
 }
 
@@ -28,30 +29,54 @@ body{
   bottom:0;
   width:100%;
   height:100%;
-  background:#fff;
+  background:linear-gradient(#fff,#eee);
   transition:height 1s linear;
 }
 
 .wick{
   position:absolute;
-  top:-15px;
+  top:-18px;
   left:50%;
   width:4px;
-  height:15px;
+  height:18px;
   background:black;
   transform:translateX(-50%);
 }
 
 .flame{
   position:absolute;
-  top:-60px;
+  top:-75px;
   left:50%;
-  width:25px;
-  height:45px;
-  background:radial-gradient(circle, #fff, yellow, orange);
-  border-radius:50%;
+  width:30px;
+  height:60px;
   transform:translateX(-50%);
-  animation:flicker 0.15s infinite;
+  background:radial-gradient(circle at 50% 20%, #fff, yellow, orange, transparent);
+  border-radius:50%;
+  animation:flicker 0.12s infinite;
+  filter:blur(0.5px);
+}
+
+.glow{
+  position:absolute;
+  top:-100px;
+  left:50%;
+  width:150px;
+  height:150px;
+  transform:translateX(-50%);
+  background:radial-gradient(circle, rgba(255,200,0,0.4), transparent);
+  filter:blur(20px);
+}
+
+.shadow{
+  position:absolute;
+  bottom:-20px;
+  left:50%;
+  width:130px;
+  height:25px;
+  transform:translateX(-50%);
+  background:rgba(0,0,0,0.7);
+  border-radius:50%;
+  filter:blur(12px);
 }
 
 @keyframes flicker{
@@ -60,36 +85,64 @@ body{
   100%{transform:translateX(-50%) scale(1);}
 }
 
+.drip{
+  position:absolute;
+  width:10px;
+  height:18px;
+  background:#eee;
+  border-radius:50%;
+  animation:fall linear forwards;
+}
+
+@keyframes fall{
+  from{transform:translateY(0);}
+  to{transform:translateY(170px);opacity:0;}
+}
+
 button{
   position:fixed;
   bottom:20px;
   padding:10px 20px;
+  border:none;
+  border-radius:10px;
+  background:#ff9800;
+  font-weight:bold;
 }
 </style>
 </head>
 
 <body>
 
-<div class="candle">
+<div class="candle" id="candle">
   <div class="wax" id="wax"></div>
   <div class="wick"></div>
+  <div class="glow"></div>
   <div class="flame" id="flame"></div>
 </div>
+
+<div class="shadow"></div>
 
 <button onclick="start()">Start 🔥</button>
 
 <script>
-let total = 600; // 10 mins
+let total = 600;
 let t = total;
+let running = false;
 
 const wax = document.getElementById("wax");
 const flame = document.getElementById("flame");
+const candle = document.getElementById("candle");
 
 function start(){
-  melt();
+  if(!running){
+    running = true;
+    loop();
+  }
 }
 
-function melt(){
+function loop(){
+  if(!running) return;
+
   if(t <= 0){
     flame.style.display = "none";
     return;
@@ -100,10 +153,29 @@ function melt(){
   let percent = t / total;
   wax.style.height = (percent * 100) + "%";
 
-  // flame size reduce slowly
-  flame.style.transform = `translateX(-50%) scale(${0.8 + percent*0.4})`;
+  // realistic flame shrink
+  flame.style.transform = `translateX(-50%) scale(${0.7 + percent*0.5})`;
 
-  setTimeout(melt,1000);
+  // natural drip (middle stage more)
+  let stage = 1 - percent;
+  if(Math.random() < stage){
+    drip(stage);
+  }
+
+  setTimeout(loop,1000);
+}
+
+function drip(stage){
+  let d = document.createElement("div");
+  d.className = "drip";
+
+  d.style.left = (Math.random()*60 + 10) + "%";
+  d.style.top = "20px";
+  d.style.animationDuration = (2 - stage) + "s";
+
+  candle.appendChild(d);
+
+  setTimeout(()=>d.remove(),2500);
 }
 </script>
 
