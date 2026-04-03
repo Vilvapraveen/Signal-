@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Realistic Melting Candle</title>
+<title>Ultra Realistic Candle</title>
 <style>
   body {
     margin:0;
@@ -10,8 +10,12 @@
     display:flex;
     justify-content:center;
     align-items:center;
-    background: radial-gradient(circle at center, #222, #000);
+    background: radial-gradient(circle at center, #111, #000);
     overflow:hidden;
+  }
+
+  .scene {
+    position:relative;
   }
 
   .candle {
@@ -21,6 +25,7 @@
     background:linear-gradient(#fff,#eee);
     border-radius:12px;
     overflow:hidden;
+    margin:auto;
   }
 
   .wax {
@@ -29,22 +34,6 @@
     width:100%;
     height:100%;
     background:linear-gradient(#fff,#ddd);
-    transition:height 1s linear;
-  }
-
-  .drip {
-    position:absolute;
-    width:10px;
-    height:20px;
-    background:#eee;
-    border-radius:50%;
-    opacity:0.9;
-    animation: drip 3s infinite ease-in;
-  }
-
-  @keyframes drip {
-    0% { transform: translateY(0); opacity:1; }
-    100% { transform: translateY(120px); opacity:0; }
   }
 
   .wick {
@@ -66,46 +55,77 @@
     background:radial-gradient(circle, #fff 10%, yellow 40%, orange 70%, transparent 80%);
     border-radius:50%;
     transform:translateX(-50%);
-    animation:flicker 0.15s infinite;
-    filter:blur(0.5px);
-  }
-
-  @keyframes flicker {
-    0% { transform: translateX(-50%) scale(1); }
-    50% { transform: translateX(-50%) scale(1.1); }
-    100% { transform: translateX(-50%) scale(1); }
+    animation:flicker 0.12s infinite;
+    filter:blur(0.6px);
   }
 
   .glow {
     position:absolute;
-    top:-80px;
+    top:-90px;
     left:50%;
-    width:80px;
-    height:80px;
-    background:radial-gradient(circle, rgba(255,200,0,0.4), transparent 70%);
+    width:120px;
+    height:120px;
+    background:radial-gradient(circle, rgba(255,200,0,0.5), transparent 70%);
+    transform:translateX(-50%);
+    filter:blur(20px);
+  }
+
+  .shadow {
+    position:absolute;
+    bottom:-20px;
+    left:50%;
+    width:100px;
+    height:20px;
+    background:rgba(0,0,0,0.6);
+    border-radius:50%;
     transform:translateX(-50%);
     filter:blur(10px);
+  }
+
+  @keyframes flicker {
+    0% { transform: translateX(-50%) scale(1); }
+    50% { transform: translateX(-50%) scale(1.15); }
+    100% { transform: translateX(-50%) scale(1); }
+  }
+
+  .drip {
+    position:absolute;
+    width:10px;
+    height:20px;
+    background:#eee;
+    border-radius:50%;
+    opacity:0.9;
+    animation: dripFall linear forwards;
+  }
+
+  @keyframes dripFall {
+    from { transform: translateY(0); opacity:1; }
+    to { transform: translateY(140px); opacity:0; }
   }
 
 </style>
 </head>
 <body>
 
-<div class="candle">
-  <div class="wax" id="wax"></div>
-  <div class="wick"></div>
-  <div class="glow"></div>
-  <div class="flame" id="flame"></div>
+<div class="scene">
+  <div class="candle" id="candle">
+    <div class="wax" id="wax"></div>
+    <div class="wick"></div>
+    <div class="glow"></div>
+    <div class="flame" id="flame"></div>
+  </div>
+  <div class="shadow"></div>
 </div>
 
 <script>
 const wax = document.getElementById("wax");
 const flame = document.getElementById("flame");
+const candle = document.getElementById("candle");
 
-let totalTime = 600; // 10 minutes (600 seconds)
+let totalTime = 600; // 10 mins
 let current = totalTime;
 
-function meltCandle(){
+function melt(){
   if(current <= 0){
     flame.style.display = "none";
     return;
@@ -113,37 +133,63 @@ function meltCandle(){
 
   current--;
 
-  let heightPercent = (current / totalTime) * 100;
-  wax.style.height = heightPercent + "%";
+  let percent = current / totalTime;
+  wax.style.height = (percent * 100) + "%";
 
-  createDrip();
+  // Drip intensity increases in middle
+  let stage = 1 - percent;
+  if(Math.random() < stage){
+    createDrip(stage);
+  }
 
-  requestAnimationFrame(()=>{
-    setTimeout(meltCandle,1000);
-  });
+  setTimeout(melt, 1000);
 }
 
-function createDrip(){
+function createDrip(stage){
   const drip = document.createElement("div");
   drip.className = "drip";
 
   drip.style.left = Math.random()*50 + "%";
   drip.style.top = "20px";
 
-  document.querySelector(".candle").appendChild(drip);
+  let speed = 2 - stage; // faster later
+  drip.style.animationDuration = speed + "s";
 
-  setTimeout(()=>{
-    drip.remove();
-  },3000);
+  candle.appendChild(drip);
+
+  setTimeout(()=>drip.remove(), 3000);
 }
 
-// Gravity tilt (mobile)
-window.addEventListener('devicemotion', (event)=>{
-  const x = event.accelerationIncludingGravity.x;
-  flame.style.transform = `translateX(-50%) rotate(${x*4}deg)`;
+// Motion tilt (wind simulation)
+window.addEventListener('devicemotion', (e)=>{
+  let x = e.accelerationIncludingGravity.x;
+  flame.style.transform = `translateX(-50%) rotate(${x*5}deg)`;
 });
 
-meltCandle();
+// Mic blow detection
+navigator.mediaDevices.getUserMedia({ audio: true }).then(stream => {
+  const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+  const mic = audioContext.createMediaStreamSource(stream);
+  const analyser = audioContext.createAnalyser();
+
+  mic.connect(analyser);
+  const data = new Uint8Array(analyser.frequencyBinCount);
+
+  function detectBlow(){
+    analyser.getByteFrequencyData(data);
+    let volume = data.reduce((a,b)=>a+b)/data.length;
+
+    if(volume > 60){
+      flame.style.display = "none";
+    }
+
+    requestAnimationFrame(detectBlow);
+  }
+
+  detectBlow();
+});
+
+melt();
 </script>
 
 </body>
