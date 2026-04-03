@@ -2,27 +2,30 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>GOD LEVEL RAILWAY</title>
+<title>Railway Game V2</title>
 
 <style>
 body {
   margin:0;
   overflow:hidden;
   background:black;
-  perspective:1200px;
+  color:white;
+  font-family:sans-serif;
 }
 
-/* CAMERA */
+/* HUD */
+.hud {
+  position:absolute;
+  top:10px;
+  left:10px;
+  font-size:18px;
+}
+
+/* SCENE */
 .scene {
   width:100%;
   height:100vh;
   transform:rotateX(65deg);
-  animation: cameraMove 20s infinite alternate ease-in-out;
-}
-
-@keyframes cameraMove {
-  0% { transform: rotateX(65deg) translateX(-20px); }
-  100% { transform: rotateX(65deg) translateX(20px); }
 }
 
 /* TRACK */
@@ -38,16 +41,12 @@ body {
 /* TRAIN */
 .train {
   position:absolute;
-  width:180px;
+  width:200px;
   height:50px;
-  border-radius:6px;
+  background:red;
   top:50%;
-  left:-250px;
+  left:-300px;
 }
-
-.t1 { background:red; }
-.t2 { background:blue; top:60%; }
-.t3 { background:lime; top:40%; }
 
 /* ROAD */
 .road {
@@ -65,7 +64,7 @@ body {
   height:30px;
   background:yellow;
   bottom:40px;
-  left:-80px;
+  left:50px;
 }
 
 /* SIGNAL */
@@ -83,8 +82,8 @@ body {
   background:#333;
 }
 
-.red.active { background:red; box-shadow:0 0 20px red; }
-.green.active { background:lime; box-shadow:0 0 20px lime; }
+.red.active { background:red; }
+.green.active { background:lime; }
 
 /* GATE */
 .gate {
@@ -95,32 +94,19 @@ body {
   top:60%;
   right:180px;
   transform-origin:left;
-  transition:1s;
+  transition:0.5s;
 }
 .up { transform:rotate(-75deg); }
 .down { transform:rotate(0deg); }
 
-/* RAIN */
-.rain {
+/* GAME OVER */
+.gameover {
   position:absolute;
-  width:2px;
-  height:15px;
-  background:rgba(255,255,255,0.3);
-  animation: rainFall linear infinite;
-}
-
-@keyframes rainFall {
-  from { transform: translateY(-100vh); }
-  to { transform: translateY(100vh); }
-}
-
-/* FOG */
-.fog {
-  position:absolute;
+  top:40%;
   width:100%;
-  height:100%;
-  background:radial-gradient(circle, transparent, rgba(0,0,0,0.7));
-  pointer-events:none;
+  text-align:center;
+  font-size:40px;
+  display:none;
 }
 
 </style>
@@ -128,13 +114,16 @@ body {
 
 <body>
 
+<div class="hud">
+  Score: <span id="score">0</span> |
+  Lives: <span id="lives">3</span>
+</div>
+
 <div class="scene">
 
   <div class="track"></div>
 
-  <div id="t1" class="train t1"></div>
-  <div id="t2" class="train t2"></div>
-  <div id="t3" class="train t3"></div>
+  <div id="train" class="train"></div>
 
   <div class="signal">
     <div id="red" class="light red"></div>
@@ -147,97 +136,133 @@ body {
     <div id="car" class="car"></div>
   </div>
 
-  <div class="fog"></div>
+  <div id="gameover" class="gameover">
+    GAME OVER <br>
+    Press SPACE to Restart
+  </div>
 
 </div>
 
 <script>
 
-/* SOUND */
-const horn = new Audio("https://www.soundjay.com/train/sounds/train-horn-01.mp3");
-
-/* ELEMENTS */
-const trains = [
-  document.getElementById("t1"),
-  document.getElementById("t2"),
-  document.getElementById("t3")
-];
-
+const train = document.getElementById("train");
+const car = document.getElementById("car");
 const red = document.getElementById("red");
 const green = document.getElementById("green");
 const gate = document.getElementById("gate");
-const car = document.getElementById("car");
 
-/* RAIN GENERATOR */
-for (let i = 0; i < 100; i++) {
-  const drop = document.createElement("div");
-  drop.className = "rain";
-  drop.style.left = Math.random()*100 + "%";
-  drop.style.animationDuration = (Math.random()*1+0.5) + "s";
-  document.body.appendChild(drop);
-}
+const scoreEl = document.getElementById("score");
+const livesEl = document.getElementById("lives");
+const gameover = document.getElementById("gameover");
 
-/* SIGNAL */
-function setSignal(trainComing) {
-  red.classList.remove("active");
-  green.classList.remove("active");
+let carX = 50;
+let moving = false;
+let gameRunning = true;
 
-  if (trainComing) {
-    red.classList.add("active");
-    gate.classList.add("down");
-    gate.classList.remove("up");
-  } else {
-    green.classList.add("active");
-    gate.classList.add("up");
-    gate.classList.remove("down");
+let score = 0;
+let lives = 3;
+let speed = 5000;
+
+/* CONTROL */
+document.addEventListener("keydown", (e)=>{
+  if(!gameRunning){
+    if(e.code === "Space") restart();
+    return;
   }
+
+  if(e.key === "ArrowUp") moving = true;
+  if(e.key === "ArrowDown") moving = false;
+});
+
+/* CAR LOOP */
+function updateCar(){
+  if(moving) carX += 2;
+  car.style.left = carX + "px";
+
+  checkCollision();
+  requestAnimationFrame(updateCar);
 }
 
 /* TRAIN */
-function moveTrain(train) {
-  horn.play();
+function moveTrain(){
+  setSignal(true);
 
-  train.style.transition = "left 6s linear";
-  train.style.left = "120%";
+  train.style.transition=`left ${speed/1000}s linear`;
+  train.style.left="120%";
 
-  setTimeout(() => {
-    train.style.transition = "none";
-    train.style.left = "-250px";
-  }, 6000);
+  setTimeout(()=>{
+    train.style.transition="none";
+    train.style.left="-300px";
+    setSignal(false);
+
+    score++;
+    scoreEl.innerText = score;
+
+    speed *= 0.95; // increase difficulty
+
+  },speed);
 }
 
-/* CAR */
-function moveCar(go) {
-  if (go) {
-    car.style.transition = "left 4s linear";
-    car.style.left = "110%";
+/* SIGNAL */
+function setSignal(trainComing){
+  red.classList.toggle("active", trainComing);
+  green.classList.toggle("active", !trainComing);
 
-    setTimeout(() => {
-      car.style.transition = "none";
-      car.style.left = "-80px";
-    }, 4000);
+  gate.classList.toggle("down", trainComing);
+  gate.classList.toggle("up", !trainComing);
+}
+
+/* COLLISION */
+function checkCollision(){
+  let t = train.getBoundingClientRect();
+  let c = car.getBoundingClientRect();
+
+  if(c.right > t.left && c.left < t.right &&
+     c.bottom > t.top && c.top < t.bottom){
+    loseLife();
   }
 }
 
-/* AI SYSTEM */
-function loop() {
-  const randomTrain = trains[Math.floor(Math.random()*trains.length)];
+/* LIFE */
+function loseLife(){
+  lives--;
+  livesEl.innerText = lives;
 
-  setSignal(true);
-  moveCar(false);
+  carX = 50;
 
-  setTimeout(() => {
-    moveTrain(randomTrain);
-  }, 1000);
-
-  setTimeout(() => {
-    setSignal(false);
-    moveCar(true);
-  }, 7000);
-
-  setTimeout(loop, 10000 + Math.random()*3000);
+  if(lives <= 0){
+    endGame();
+  }
 }
 
+/* END */
+function endGame(){
+  gameRunning = false;
+  gameover.style.display = "block";
+}
+
+/* RESTART */
+function restart(){
+  score = 0;
+  lives = 3;
+  speed = 5000;
+  gameRunning = true;
+
+  scoreEl.innerText = score;
+  livesEl.innerText = lives;
+  gameover.style.display = "none";
+}
+
+/* LOOP */
+function loop(){
+  if(!gameRunning) return;
+
+  moveTrain();
+
+  setTimeout(loop, speed + 1000);
+}
+
+updateCar();
 loop();
 
 </script>
