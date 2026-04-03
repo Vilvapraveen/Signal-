@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Candle Animation</title>
+  <title>Candle Motion Flame</title>
   <style>
     body {
       margin: 0;
@@ -39,25 +39,68 @@
       width: 20px;
       height: 40px;
       background: radial-gradient(circle, yellow 0%, orange 60%, transparent 70%);
-      border-radius: 50% 50% 50% 50%;
+      border-radius: 50%;
       transform: translateX(-50%);
-      animation: flicker 0.2s infinite;
+      transition: transform 0.1s;
     }
 
-    @keyframes flicker {
-      0% { transform: translateX(-50%) scale(1); opacity: 1; }
-      50% { transform: translateX(-50%) scale(1.1); opacity: 0.8; }
-      100% { transform: translateX(-50%) scale(1); opacity: 1; }
+    .off {
+      opacity: 0;
     }
 
+    button {
+      position: absolute;
+      bottom: 20px;
+      padding: 10px 20px;
+      border: none;
+      background: orange;
+      color: #000;
+      font-weight: bold;
+      border-radius: 8px;
+    }
   </style>
 </head>
 <body>
 
   <div class="candle">
     <div class="wick"></div>
-    <div class="flame"></div>
+    <div class="flame" id="flame"></div>
   </div>
+
+  <button onclick="enableMotion()">Enable Motion</button>
+
+  <script>
+    const flame = document.getElementById("flame");
+
+    function enableMotion() {
+      if (typeof DeviceMotionEvent.requestPermission === 'function') {
+        DeviceMotionEvent.requestPermission()
+          .then(permissionState => {
+            if (permissionState === 'granted') {
+              startMotion();
+            }
+          })
+          .catch(console.error);
+      } else {
+        startMotion();
+      }
+    }
+
+    function startMotion() {
+      window.addEventListener('devicemotion', (event) => {
+        const x = event.accelerationIncludingGravity.x;
+        const y = event.accelerationIncludingGravity.y;
+
+        // Flame tilt effect
+        flame.style.transform = `translateX(-50%) rotate(${x * 5}deg) scale(${1 + Math.abs(y) * 0.02})`;
+
+        // Blow out condition (shake hard)
+        if (Math.abs(x) > 8 || Math.abs(y) > 12) {
+          flame.classList.add("off");
+        }
+      });
+    }
+  </script>
 
 </body>
 </html>
