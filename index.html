@@ -1,97 +1,271 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Fire Border</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Vilva Praveen — Developer Portfolio</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=DM+Mono:wght@400&display=swap" rel="stylesheet">
 
 <style>
-body {
-  margin: 0;
-  background: black;
-  overflow: hidden;
+:root {
+  --bg: #0a0a0f;
+  --card: #111118;
+  --border: #1e1e2e;
+  --accent: #00e5a0;
+  --text: #e8e8f0;
+  --sub: #7a7a9a;
 }
 
-canvas {
-  display: block;
+*{margin:0;padding:0;box-sizing:border-box;}
+
+body{
+  background:var(--bg);
+  color:var(--text);
+  font-family:'Syne',sans-serif;
+  overflow-x:hidden;
+}
+
+/* 🔥 CANVAS */
+#fireCanvas{
+  position:fixed;
+  inset:0;
+  z-index:0;
+  pointer-events:none;
+}
+
+/* LAYOUT */
+.wrapper{
+  position:relative;
+  z-index:1;
+  display:grid;
+  grid-template-columns:280px 1fr;
+  gap:20px;
+  max-width:1100px;
+  margin:auto;
+  padding:40px 20px;
+}
+
+@media(max-width:900px){
+  .wrapper{grid-template-columns:1fr;}
+}
+
+/* SIDEBAR */
+.sidebar{
+  background:var(--card);
+  border:1px solid var(--border);
+  border-radius:16px;
+  padding:20px;
+  text-align:center;
+}
+
+.avatar{
+  width:80px;height:80px;
+  border-radius:50%;
+  border:2px solid var(--accent);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  margin:auto;
+  font-weight:800;
+  font-size:28px;
+  color:var(--accent);
+}
+
+.name{font-size:20px;font-weight:800;margin-top:10px;}
+.role{font-size:12px;color:var(--accent);margin-bottom:20px;}
+
+.contact{
+  font-size:13px;
+  color:var(--sub);
+}
+
+/* MAIN */
+.card{
+  background:var(--card);
+  border:1px solid var(--border);
+  border-radius:16px;
+  padding:24px;
+  margin-bottom:20px;
+}
+
+h2{
+  font-size:22px;
+  margin-bottom:16px;
+}
+
+p{color:var(--sub);line-height:1.6;}
+
+.skills span{
+  display:inline-block;
+  border:1px solid var(--border);
+  padding:6px 10px;
+  margin:5px;
+  border-radius:6px;
+  font-size:12px;
+}
+
+.project{
+  padding:15px;
+  border:1px solid var(--border);
+  border-radius:10px;
+  margin-bottom:10px;
+}
+
+/* BUTTON */
+.btn{
+  background:var(--accent);
+  color:#000;
+  padding:10px 20px;
+  border:none;
+  border-radius:6px;
+  cursor:pointer;
+  font-weight:700;
 }
 </style>
 </head>
 
 <body>
 
-<canvas id="canvas"></canvas>
+<canvas id="fireCanvas"></canvas>
+
+<div class="wrapper">
+
+  <!-- SIDEBAR -->
+  <div class="sidebar">
+    <div class="avatar">VP</div>
+    <div class="name">Vilva Praveen</div>
+    <div class="role">Web Developer</div>
+    <div class="contact">Chennai • India</div>
+  </div>
+
+  <!-- MAIN -->
+  <div>
+
+    <div class="card">
+      <h2>About</h2>
+      <p>I build modern, interactive web experiences with creative UI and performance focus.</p>
+    </div>
+
+    <div class="card">
+      <h2>Skills</h2>
+      <div class="skills">
+        <span>HTML</span>
+        <span>CSS</span>
+        <span>JavaScript</span>
+        <span>React</span>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Projects</h2>
+
+      <div class="project">
+        <b>Traffic Signal System</b>
+        <p>Interactive frontend signal simulation</p>
+      </div>
+
+      <div class="project">
+        <b>Train Border UI</b>
+        <p>Creative animated border concept</p>
+      </div>
+
+    </div>
+
+    <div class="card">
+      <h2>Contact</h2>
+      <button class="btn">Hire Me</button>
+    </div>
+
+  </div>
+
+</div>
 
 <script>
-const canvas = document.getElementById("canvas");
+const canvas = document.getElementById("fireCanvas");
 const ctx = canvas.getContext("2d");
 
-function resize() {
-  canvas.width = window.innerWidth;
-  canvas.height = window.innerHeight;
+let mouse={x:innerWidth/2,y:innerHeight/2};
+let scrollSpeed=1;
+let hue=30;
+
+function resize(){
+  canvas.width=innerWidth;
+  canvas.height=innerHeight;
 }
 resize();
-window.addEventListener("resize", resize);
+addEventListener("resize",resize);
 
-let particles = [];
+addEventListener("mousemove",e=>{
+  mouse.x=e.clientX;
+  mouse.y=e.clientY;
 
-// 🔥 PARTICLE
-class Particle {
-  constructor(x, y) {
-    this.x = x;
-    this.y = y;
-    this.size = Math.random() * 6 + 2;
-    this.speedY = Math.random() * -2 - 1;
-    this.speedX = (Math.random() - 0.5) * 2;
-    this.life = 100;
+  for(let i=0;i<2;i++){
+    particles.push(new Particle(mouse.x,mouse.y,true));
+  }
+});
+
+addEventListener("scroll",()=>{
+  scrollSpeed=1+scrollY*0.002;
+});
+
+document.body.addEventListener("mouseenter",()=>hue=140);
+document.body.addEventListener("mouseleave",()=>hue=30);
+
+let particles=[];
+
+class Particle{
+  constructor(x,y,isMouse=false){
+    this.x=x;
+    this.y=y;
+    this.size=Math.random()*5+2;
+    this.speedY=(Math.random()*-1.5-0.5)*scrollSpeed;
+    this.speedX=(Math.random()-0.5)*2;
+    this.life=80;
   }
 
-  update() {
-    this.x += this.speedX;
-    this.y += this.speedY;
+  update(){
+    this.x+=this.speedX;
+    this.y+=this.speedY;
     this.life--;
-    this.size *= 0.96;
+    this.size*=0.96;
   }
 
-  draw() {
-    ctx.fillStyle = "orange";
+  draw(){
+    const g=ctx.createRadialGradient(this.x,this.y,0,this.x,this.y,this.size*2);
+
+    g.addColorStop(0,`hsla(${hue},100%,60%,0.9)`);
+    g.addColorStop(0.5,`hsla(${hue},100%,50%,0.4)`);
+    g.addColorStop(1,`hsla(${hue},100%,30%,0)`);
+
+    ctx.fillStyle=g;
     ctx.beginPath();
-    ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+    ctx.arc(this.x,this.y,this.size,0,Math.PI*2);
     ctx.fill();
   }
 }
 
-// 🔥 CREATE BORDER FIRE
-function createBorderFire() {
-  let w = canvas.width;
-  let h = canvas.height;
+function createFire(){
+  let w=canvas.width,h=canvas.height;
 
-  for (let i = 0; i < 5; i++) {
-
-    // TOP
-    particles.push(new Particle(Math.random() * w, 0));
-
-    // BOTTOM
-    particles.push(new Particle(Math.random() * w, h));
-
-    // LEFT
-    particles.push(new Particle(0, Math.random() * h));
-
-    // RIGHT
-    particles.push(new Particle(w, Math.random() * h));
+  for(let i=0;i<2;i++){
+    particles.push(new Particle(Math.random()*w,0));
+    particles.push(new Particle(Math.random()*w,h));
+    particles.push(new Particle(0,Math.random()*h));
+    particles.push(new Particle(w,Math.random()*h));
   }
 }
 
-// 🎬 LOOP
-function animate() {
-  ctx.fillStyle = "rgba(0,0,0,0.3)";
-  ctx.fillRect(0, 0, canvas.width, canvas.height);
+function animate(){
+  ctx.fillStyle="rgba(0,0,0,0.25)";
+  ctx.fillRect(0,0,canvas.width,canvas.height);
 
-  createBorderFire();
+  createFire();
 
-  particles.forEach((p, i) => {
+  particles.forEach((p,i)=>{
     p.update();
     p.draw();
-    if (p.life <= 0) particles.splice(i, 1);
+    if(p.life<=0)particles.splice(i,1);
   });
 
   requestAnimationFrame(animate);
