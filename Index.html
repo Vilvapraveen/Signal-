@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Traffic Signal React</title>
+
+  <!-- React CDN -->
+  <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+
+  <!-- Babel (to use JSX in browser) -->
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+</head>
+
+<body>
+
+  <div id="root"></div>
+
+  <script type="text/babel">
+
+    const { useState, useEffect } = React;
+
+    function App() {
+      const [light, setLight] = useState("red");
+      const [time, setTime] = useState(5);
+
+      // traffic logic
+      useEffect(() => {
+        let timer;
+
+        if (light === "red") {
+          setTime(5);
+          timer = setTimeout(() => setLight("green"), 5000);
+        } else if (light === "green") {
+          setTime(4);
+          timer = setTimeout(() => setLight("yellow"), 4000);
+        } else {
+          setTime(2);
+          timer = setTimeout(() => setLight("red"), 2000);
+        }
+
+        return () => clearTimeout(timer);
+      }, [light]);
+
+      // countdown
+      useEffect(() => {
+        if (time === 0) return;
+
+        const interval = setInterval(() => {
+          setTime((prev) => prev - 1);
+        }, 1000);
+
+        return () => clearInterval(interval);
+      }, [time]);
+
+      return (
+        <div style={styles.app}>
+          <h1>🚦 Traffic Signal</h1>
+
+          <div style={styles.box}>
+            <div style={{ ...styles.light, ...(light === "red" ? styles.red : {}) }}></div>
+            <div style={{ ...styles.light, ...(light === "yellow" ? styles.yellow : {}) }}></div>
+            <div style={{ ...styles.light, ...(light === "green" ? styles.green : {}) }}></div>
+          </div>
+
+          <h2>{light.toUpperCase()}</h2>
+          <h3>Time Left: {time}s</h3>
+
+          <div>
+            <button onClick={() => setLight("red")}>Red</button>
+            <button onClick={() => setLight("yellow")}>Yellow</button>
+            <button onClick={() => setLight("green")}>Green</button>
+          </div>
+        </div>
+      );
+    }
+
+    const styles = {
+      app: {
+        textAlign: "center",
+        background: "#111",
+        color: "white",
+        height: "100vh",
+        paddingTop: "50px"
+      },
+      box: {
+        width: "120px",
+        margin: "20px auto",
+        background: "black",
+        padding: "15px",
+        borderRadius: "10px"
+      },
+      light: {
+        width: "90px",
+        height: "90px",
+        margin: "15px auto",
+        borderRadius: "50%",
+        background: "grey"
+      },
+      red: {
+        background: "red",
+        boxShadow: "0 0 20px red"
+      },
+      yellow: {
+        background: "yellow",
+        boxShadow: "0 0 20px yellow"
+      },
+      green: {
+        background: "green",
+        boxShadow: "0 0 20px green"
+      }
+    };
+
+    const root = ReactDOM.createRoot(document.getElementById("root"));
+    root.render(<App />);
+
+  </script>
+
+</body>
+</html>
