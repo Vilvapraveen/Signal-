@@ -2,112 +2,31 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Ultra Realistic Candle</title>
+<title>Realistic Candle (Working)</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <style>
-  body {
-    margin:0;
-    height:100vh;
-    display:flex;
-    justify-content:center;
-    align-items:center;
-    background: radial-gradient(circle at center, #111, #000);
-    overflow:hidden;
-  }
-
-  .scene {
-    position:relative;
-  }
-
-  .candle {
-    position:relative;
-    width:60px;
-    height:180px;
-    background:linear-gradient(#fff,#eee);
-    border-radius:12px;
-    overflow:hidden;
-    margin:auto;
-  }
-
-  .wax {
-    position:absolute;
-    bottom:0;
-    width:100%;
-    height:100%;
-    background:linear-gradient(#fff,#ddd);
-  }
-
-  .wick {
-    position:absolute;
-    top:-20px;
-    left:50%;
-    width:4px;
-    height:20px;
-    background:black;
-    transform:translateX(-50%);
-  }
-
-  .flame {
-    position:absolute;
-    top:-65px;
-    left:50%;
-    width:25px;
-    height:50px;
-    background:radial-gradient(circle, #fff 10%, yellow 40%, orange 70%, transparent 80%);
-    border-radius:50%;
-    transform:translateX(-50%);
-    animation:flicker 0.12s infinite;
-    filter:blur(0.6px);
-  }
-
-  .glow {
-    position:absolute;
-    top:-90px;
-    left:50%;
-    width:120px;
-    height:120px;
-    background:radial-gradient(circle, rgba(255,200,0,0.5), transparent 70%);
-    transform:translateX(-50%);
-    filter:blur(20px);
-  }
-
-  .shadow {
-    position:absolute;
-    bottom:-20px;
-    left:50%;
-    width:100px;
-    height:20px;
-    background:rgba(0,0,0,0.6);
-    border-radius:50%;
-    transform:translateX(-50%);
-    filter:blur(10px);
-  }
-
-  @keyframes flicker {
-    0% { transform: translateX(-50%) scale(1); }
-    50% { transform: translateX(-50%) scale(1.15); }
-    100% { transform: translateX(-50%) scale(1); }
-  }
-
-  .drip {
-    position:absolute;
-    width:10px;
-    height:20px;
-    background:#eee;
-    border-radius:50%;
-    opacity:0.9;
-    animation: dripFall linear forwards;
-  }
-
-  @keyframes dripFall {
-    from { transform: translateY(0); opacity:1; }
-    to { transform: translateY(140px); opacity:0; }
-  }
-
+  body{margin:0;height:100vh;display:flex;align-items:center;justify-content:center;background:#000}
+  .wrap{position:relative}
+  .candle{position:relative;width:70px;height:200px;background:linear-gradient(#fff,#e6e6e6);border-radius:14px;overflow:hidden}
+  .wax{position:absolute;bottom:0;width:100%;height:100%;background:linear-gradient(#fff,#ddd);transition:height 1s linear}
+  .wick{position:absolute;top:-18px;left:50%;width:4px;height:18px;background:#000;transform:translateX(-50%)}
+  .flame{position:absolute;top:-70px;left:50%;width:28px;height:55px;border-radius:50%;transform:translateX(-50%);
+    background:radial-gradient(circle at 50% 30%, #fff 0%, #ffe066 25%, #ff9f1c 55%, rgba(255,0,0,0.2) 75%, transparent 80%);
+    animation:flicker .12s infinite ease-in-out; filter:blur(.6px)}
+  .glow{position:absolute;top:-95px;left:50%;width:140px;height:140px;transform:translateX(-50%);
+    background:radial-gradient(circle, rgba(255,200,0,.5), transparent 65%);filter:blur(20px)}
+  .shadow{position:absolute;bottom:-18px;left:50%;width:120px;height:24px;transform:translateX(-50%);
+    background:rgba(0,0,0,.7);border-radius:50%;filter:blur(12px)}
+  @keyframes flicker{0%{transform:translateX(-50%) scale(1)}50%{transform:translateX(-50%) scale(1.15)}100%{transform:translateX(-50%) scale(1)}}
+  .drip{position:absolute;width:10px;height:18px;background:#eee;border-radius:50%;opacity:.95;animation:fall linear forwards}
+  @keyframes fall{from{transform:translateY(0);opacity:1}to{transform:translateY(150px);opacity:0}}
+  .controls{position:fixed;bottom:16px;left:50%;transform:translateX(-50%);display:flex;gap:10px}
+  button{padding:10px 14px;border:none;border-radius:10px;background:#ff9f1c;color:#000;font-weight:700}
 </style>
 </head>
 <body>
 
-<div class="scene">
+<div class="wrap">
   <div class="candle" id="candle">
     <div class="wax" id="wax"></div>
     <div class="wick"></div>
@@ -117,79 +36,85 @@
   <div class="shadow"></div>
 </div>
 
+<div class="controls">
+  <button onclick="enableMotion()">Enable Motion</button>
+  <button onclick="enableMic()">Enable Blow</button>
+  <button onclick="resetCandle()">Reset</button>
+</div>
+
 <script>
-const wax = document.getElementById("wax");
-const flame = document.getElementById("flame");
-const candle = document.getElementById("candle");
+const wax = document.getElementById('wax');
+const flame = document.getElementById('flame');
+const candle = document.getElementById('candle');
 
-let totalTime = 600; // 10 mins
-let current = totalTime;
+let TOTAL = 600; // 10 mins
+let t = TOTAL;
+let running = true;
 
-function melt(){
-  if(current <= 0){
-    flame.style.display = "none";
-    return;
-  }
+function loop(){
+  if(!running) return;
+  if(t<=0){ flame.style.display='none'; return; }
+  t--;
+  const p = t / TOTAL; // 1 -> 0
+  wax.style.height = (p*100) + '%';
 
-  current--;
+  // drip probability increases over time
+  const stage = 1 - p;
+  if(Math.random() < Math.min(0.8, stage + 0.1)) createDrip(stage);
 
-  let percent = current / totalTime;
-  wax.style.height = (percent * 100) + "%";
-
-  // Drip intensity increases in middle
-  let stage = 1 - percent;
-  if(Math.random() < stage){
-    createDrip(stage);
-  }
-
-  setTimeout(melt, 1000);
+  setTimeout(loop, 1000);
 }
 
 function createDrip(stage){
-  const drip = document.createElement("div");
-  drip.className = "drip";
-
-  drip.style.left = Math.random()*50 + "%";
-  drip.style.top = "20px";
-
-  let speed = 2 - stage; // faster later
-  drip.style.animationDuration = speed + "s";
-
-  candle.appendChild(drip);
-
-  setTimeout(()=>drip.remove(), 3000);
+  const d = document.createElement('div');
+  d.className='drip';
+  d.style.left = (Math.random()*60+10) + '%';
+  d.style.top = '18px';
+  d.style.animationDuration = (2 - stage) + 's';
+  candle.appendChild(d);
+  setTimeout(()=>d.remove(), 2500);
 }
 
-// Motion tilt (wind simulation)
-window.addEventListener('devicemotion', (e)=>{
-  let x = e.accelerationIncludingGravity.x;
-  flame.style.transform = `translateX(-50%) rotate(${x*5}deg)`;
-});
+// --- Motion (safe enable) ---
+function enableMotion(){
+  try{
+    if(typeof DeviceMotionEvent !== 'undefined' && typeof DeviceMotionEvent.requestPermission === 'function'){
+      DeviceMotionEvent.requestPermission().then(p=>{ if(p==='granted') startMotion(); });
+    } else { startMotion(); }
+  }catch(e){ startMotion(); }
+}
+function startMotion(){
+  window.addEventListener('devicemotion', (e)=>{
+    const x = (e.accelerationIncludingGravity?.x)||0;
+    flame.style.transform = `translateX(-50%) rotate(${x*5}deg)`;
+  });
+}
 
-// Mic blow detection
-navigator.mediaDevices.getUserMedia({ audio: true }).then(stream => {
-  const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-  const mic = audioContext.createMediaStreamSource(stream);
-  const analyser = audioContext.createAnalyser();
-
-  mic.connect(analyser);
-  const data = new Uint8Array(analyser.frequencyBinCount);
-
-  function detectBlow(){
-    analyser.getByteFrequencyData(data);
-    let volume = data.reduce((a,b)=>a+b)/data.length;
-
-    if(volume > 60){
-      flame.style.display = "none";
+// --- Mic blow (safe enable) ---
+let micStarted = false;
+function enableMic(){
+  if(micStarted) return; micStarted = true;
+  navigator.mediaDevices.getUserMedia({audio:true}).then(stream=>{
+    const ctx = new (window.AudioContext||window.webkitAudioContext)();
+    const src = ctx.createMediaStreamSource(stream);
+    const an = ctx.createAnalyser();
+    src.connect(an);
+    const data = new Uint8Array(an.frequencyBinCount);
+    function tick(){
+      an.getByteFrequencyData(data);
+      const vol = data.reduce((a,b)=>a+b,0)/data.length;
+      if(vol > 65){ flame.style.display='none'; }
+      requestAnimationFrame(tick);
     }
+    tick();
+  }).catch(()=>{ console.log('Mic denied'); });
+}
 
-    requestAnimationFrame(detectBlow);
-  }
+function resetCandle(){
+  t = TOTAL; running = true; wax.style.height='100%'; flame.style.display='block';
+}
 
-  detectBlow();
-});
-
-melt();
+loop();
 </script>
 
 </body>
