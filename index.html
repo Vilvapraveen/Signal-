@@ -2,7 +2,7 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>Loop Train System</title>
+<title>Train Signal Game</title>
 
 <style>
 body {
@@ -10,16 +10,15 @@ body {
   overflow:hidden;
   background:linear-gradient(#0f2027,#000);
 }
-  
-/* TRACK PATH (rectangle) */
+
+/* TRACK */
 .track {
   position:absolute;
-  width:40%;
-  height:90%;
-  top:10%;
-  left:10%;
+  width:60%;
+  height:60%;
+  top:20%;
+  left:20%;
   border:8px solid #555;
-  box-sizing: centre-box;
 }
 
 /* TRAIN */
@@ -35,15 +34,13 @@ body {
 /* SIGNAL */
 .signal {
   position:absolute;
-  top:10%;
-  left:10%;
 }
 
 .light {
-  width:30px;
-  height:30px;
+  width:25px;
+  height:25px;
   border-radius:50%;
-  margin:5px;
+  margin:3px;
   background:#333;
 }
 
@@ -56,10 +53,9 @@ body {
 <body>
 
 <div class="track"></div>
-
 <div id="train" class="train"></div>
 
-<div class="signal">
+<div id="signal" class="signal">
   <div id="red" class="light red"></div>
   <div id="green" class="light green"></div>
 </div>
@@ -67,44 +63,68 @@ body {
 <script>
 
 const train = document.getElementById("train");
+const signal = document.getElementById("signal");
 const red = document.getElementById("red");
 const green = document.getElementById("green");
 
-let path = [
-  { x: 10, y: 20 }, // top-left
-  { x: 80, y: 20 }, // top-right
-  { x: 80, y: 20 }, // bottom-right
-  { x: 10, y: 20 }  // bottom-left
-];
+let x = 50;
+let y = 50;
 
-let i = 0;
-let speed = 2000;
+/* Initial Position */
+signal.style.left = x + "%";
+signal.style.top = y + "%";
 
+/* Signal Control */
 function setSignal(stop){
   red.classList.toggle("active", stop);
   green.classList.toggle("active", !stop);
 }
 
-function moveTrain(){
-  let point = path[i];
+/* Keyboard Movement */
+document.addEventListener("keydown", (e) => {
 
   setSignal(true); // red while moving
+
+  if(e.key === "ArrowUp") y -= 5;
+  if(e.key === "ArrowDown") y += 5;
+  if(e.key === "ArrowLeft") x -= 5;
+  if(e.key === "ArrowRight") x += 5;
+
+  signal.style.left = x + "%";
+  signal.style.top = y + "%";
+
+  setTimeout(() => {
+    setSignal(false); // green when stop
+  }, 300);
+});
+
+/* Train auto loop */
+let path = [
+  { x:20, y:20 },
+  { x:80, y:20 },
+  { x:80, y:80 },
+  { x:20, y:80 }
+];
+
+let i = 0;
+
+function moveTrain(){
+  let point = path[i];
 
   train.style.transition = "all 2s linear";
   train.style.left = point.x + "%";
   train.style.top = point.y + "%";
 
-  setTimeout(() => {
-    setSignal(false); // green at stop
-  }, 1500);
-
   i = (i + 1) % path.length;
-
-  setTimeout(moveTrain, speed);
+  setTimeout(moveTrain, 2000);
 }
 
 moveTrain();
 
+</script>
+
+</body>
+</html>
 </script>
 
 </body>
