@@ -146,7 +146,7 @@
   const statusDisplay = document.getElementById("status");
 
   let state = 0;
-  let timer = 3;
+  let timer = 10;
   let interval;
   let running = false;
 
@@ -170,13 +170,13 @@
   function nextState() {
     if (state === 0) {
       state = 1;
-      timer = 1;
+      timer = 10;
     } else if (state === 1) {
       state = 2;
-      timer = 3;
+      timer = 10;
     } else {
       state = 0;
-      timer = 3;
+      timer = 10;
     }
     updateUI();
   }
@@ -206,7 +206,7 @@
   function reset() {
     stop();
     state = 0;
-    timer = 13;
+    timer = 3;
     timerDisplay.innerText = timer;
     statusDisplay.innerText = "STOP";
     updateUI();
