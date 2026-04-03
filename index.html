@@ -73,12 +73,12 @@ const green = document.getElementById("green");
 let path = [
   { x: 10, y: 20 }, // top-left
   { x: 80, y: 20 }, // top-right
-  { x: 80, y: 70 }, // bottom-right
-  { x: 10, y: 70 }  // bottom-left
+  { x: 80, y: 20 }, // bottom-right
+  { x: 10, y: 20 }  // bottom-left
 ];
 
 let i = 0;
-let speed = 1000;
+let speed = 2000;
 
 function setSignal(stop){
   red.classList.toggle("active", stop);
