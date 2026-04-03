@@ -1,131 +1,63 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-<meta charset="UTF-8">
-<title>Train Signal Game</title>
+  <meta charset="UTF-8">
+  <title>Candle Animation</title>
+  <style>
+    body {
+      margin: 0;
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background: #111;
+    }
 
-<style>
-body {
-  margin:0;
-  overflow:hidden;
-  background:linear-gradient(#0f2027,#000);
-}
+    .candle {
+      position: relative;
+      width: 60px;
+      height: 150px;
+      background: linear-gradient(#fff, #ddd);
+      border-radius: 10px;
+      box-shadow: inset 0 0 10px rgba(0,0,0,0.3);
+    }
 
-/* TRACK */
-.track {
-  position:absolute;
-  width:60%;
-  height:60%;
-  top:20%;
-  left:20%;
-  border:8px solid #555;
-}
+    .wick {
+      position: absolute;
+      top: -20px;
+      left: 50%;
+      width: 4px;
+      height: 20px;
+      background: black;
+      transform: translateX(-50%);
+    }
 
-/* TRAIN */
-.train {
-  position:absolute;
-  width:10px;
-  height:40px;
-  background:red;
-  border-radius:2px;
-  box-shadow:0 0 15px red;
-}
+    .flame {
+      position: absolute;
+      top: -60px;
+      left: 50%;
+      width: 20px;
+      height: 40px;
+      background: radial-gradient(circle, yellow 0%, orange 60%, transparent 70%);
+      border-radius: 50% 50% 50% 50%;
+      transform: translateX(-50%);
+      animation: flicker 0.2s infinite;
+    }
 
-/* SIGNAL */
-.signal {
-  position:absolute;
-}
+    @keyframes flicker {
+      0% { transform: translateX(-50%) scale(1); opacity: 1; }
+      50% { transform: translateX(-50%) scale(1.1); opacity: 0.8; }
+      100% { transform: translateX(-50%) scale(1); opacity: 1; }
+    }
 
-.light {
-  width:25px;
-  height:25px;
-  border-radius:50%;
-  margin:3px;
-  background:#333;
-}
-
-.red.active { background:red; box-shadow:0 0 15px red; }
-.green.active { background:lime; box-shadow:0 0 15px lime; }
-
-</style>
+  </style>
 </head>
-
 <body>
 
-<div class="track"></div>
-<div id="train" class="train"></div>
-
-<div id="signal" class="signal">
-  <div id="red" class="light red"></div>
-  <div id="green" class="light green"></div>
-</div>
-
-<script>
-
-const train = document.getElementById("train");
-const signal = document.getElementById("signal");
-const red = document.getElementById("red");
-const green = document.getElementById("green");
-
-let x = 50;
-let y = 50;
-
-/* Initial Position */
-signal.style.left = x + "%";
-signal.style.top = y + "%";
-
-/* Signal Control */
-function setSignal(stop){
-  red.classList.toggle("active", stop);
-  green.classList.toggle("active", !stop);
-}
-
-/* Keyboard Movement */
-document.addEventListener("keydown", (e) => {
-
-  setSignal(true); // red while moving
-
-  if(e.key === "ArrowUp") y -= 5;
-  if(e.key === "ArrowDown") y += 5;
-  if(e.key === "ArrowLeft") x -= 5;
-  if(e.key === "ArrowRight") x += 5;
-
-  signal.style.left = x + "%";
-  signal.style.top = y + "%";
-
-  setTimeout(() => {
-    setSignal(false); // green when stop
-  }, 300);
-});
-
-/* Train auto loop */
-let path = [
-  { x:20, y:20 },
-  { x:80, y:20 },
-  { x:80, y:80 },
-  { x:20, y:80 }
-];
-
-let i = 0;
-
-function moveTrain(){
-  let point = path[i];
-
-  train.style.transition = "all 2s linear";
-  train.style.left = point.x + "%";
-  train.style.top = point.y + "%";
-
-  i = (i + 1) % path.length;
-  setTimeout(moveTrain, 2000);
-}
-
-moveTrain();
-
-</script>
-
-</body>
-</html>
-</script>
+  <div class="candle">
+    <div class="wick"></div>
+    <div class="flame"></div>
+  </div>
 
 </body>
 </html>
