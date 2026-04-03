@@ -2,7 +2,7 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>Cinematic Train System</title>
+<title>Loop Train System</title>
 
 <style>
 body {
@@ -11,95 +11,57 @@ body {
   background:linear-gradient(#0f2027,#000);
 }
 
-/* CAMERA */
-.scene {
-  width:100%;
-  height:100vh;
-  transform:rotateX(65deg);
-  animation: cam 8s infinite alternate ease-in-out;
-}
-
-@keyframes cam {
-  from { transform: rotateX(65deg) translateX(-20px); }
-  to { transform: rotateX(65deg) translateX(20px); }
-}
-
-/* TRACK */
+/* TRACK PATH (rectangle) */
 .track {
   position:absolute;
-  width:200%;
-  height:8px;
-  background:#555;
-  top:50%;
-  left:-50%;
+  width:80%;
+  height:60%;
+  top:20%;
+  left:10%;
+  border:6px solid #555;
+  box-sizing:border-box;
 }
 
 /* TRAIN */
 .train {
   position:absolute;
-  width:180px;
-  height:40px;
+  width:80px;
+  height:30px;
+  background:red;
   border-radius:6px;
-  background:linear-gradient(red,#550000);
-  top:50%;
-  left:-200px;
-  box-shadow:0 0 20px red;
-}
-
-/* LIGHT EFFECT */
-.train::after {
-  content:"";
-  position:absolute;
-  width:100px;
-  height:100%;
-  right:-100px;
-  background:linear-gradient(to right, rgba(255,0,0,0.5), transparent);
-}
-
-/* CITY LIGHTS */
-.city {
-  position:absolute;
-  width:100%;
-  height:100%;
-  background:
-    radial-gradient(circle at 20% 80%, #222 20%, transparent 21%),
-    radial-gradient(circle at 50% 80%, #222 20%, transparent 21%),
-    radial-gradient(circle at 80% 80%, #222 20%, transparent 21%);
+  box-shadow:0 0 15px red;
 }
 
 /* SIGNAL */
 .signal {
   position:absolute;
-  right:100px;
-  top:40%;
+  top:10%;
+  left:10%;
 }
 
 .light {
-  width:40px;
-  height:40px;
+  width:30px;
+  height:30px;
   border-radius:50%;
-  margin:10px;
+  margin:5px;
   background:#333;
 }
 
-.red.active { background:red; box-shadow:0 0 20px red; }
-.green.active { background:lime; box-shadow:0 0 20px lime; }
+.red.active { background:red; box-shadow:0 0 15px red; }
+.green.active { background:lime; box-shadow:0 0 15px lime; }
 
 </style>
 </head>
 
 <body>
 
-<div class="scene">
-  <div class="city"></div>
-  <div class="track"></div>
+<div class="track"></div>
 
-  <div id="train" class="train"></div>
+<div id="train" class="train"></div>
 
-  <div class="signal">
-    <div id="red" class="light red"></div>
-    <div id="green" class="light green"></div>
-  </div>
+<div class="signal">
+  <div id="red" class="light red"></div>
+  <div id="green" class="light green"></div>
 </div>
 
 <script>
@@ -108,37 +70,40 @@ const train = document.getElementById("train");
 const red = document.getElementById("red");
 const green = document.getElementById("green");
 
-let speed = 6;
+let path = [
+  { x: 10, y: 20 }, // top-left
+  { x: 80, y: 20 }, // top-right
+  { x: 80, y: 70 }, // bottom-right
+  { x: 10, y: 70 }  // bottom-left
+];
 
-/* SIGNAL */
+let i = 0;
+let speed = 2000;
+
 function setSignal(stop){
   red.classList.toggle("active", stop);
   green.classList.toggle("active", !stop);
 }
 
-/* TRAIN LOOP */
-function run(){
+function moveTrain(){
+  let point = path[i];
 
-  setSignal(true);
+  setSignal(true); // red while moving
 
-  setTimeout(()=>{
-    train.style.transition = "left "+speed+"s linear";
-    train.style.left = "120%";
-  },1000);
+  train.style.transition = "all 2s linear";
+  train.style.left = point.x + "%";
+  train.style.top = point.y + "%";
 
-  setTimeout(()=>{
-    setSignal(false);
-  }, speed*1000);
+  setTimeout(() => {
+    setSignal(false); // green at stop
+  }, 1500);
 
-  setTimeout(()=>{
-    train.style.transition = "none";
-    train.style.left = "-200px";
-    speed *= 0.95; // faster each loop
-    run();
-  }, (speed+2)*1000);
+  i = (i + 1) % path.length;
+
+  setTimeout(moveTrain, speed);
 }
 
-run();
+moveTrain();
 
 </script>
 
