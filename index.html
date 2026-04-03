@@ -2,239 +2,174 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>3D Traffic Signal</title>
+<title>3D Train Signal System</title>
 
 <style>
-  * {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-    font-family: "Segoe UI", sans-serif;
-  }
+body {
+  margin: 0;
+  background: linear-gradient(#0f2027, #000);
+  height: 100vh;
+  overflow: hidden;
+  perspective: 1000px;
+}
 
-  body {
-    height: 100vh;
-    background: radial-gradient(circle at top, #0f2027, #203a43, #000);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    perspective: 1000px;
-  }
+/* Scene */
+.scene {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  transform: rotateX(60deg);
+}
 
-  .container {
-    display: flex;
-    gap: 80px;
-    align-items: center;
-  }
+/* Track */
+.track {
+  position: absolute;
+  width: 200%;
+  height: 10px;
+  background: #444;
+  top: 50%;
+  left: -50%;
+  box-shadow: 0 0 20px #000;
+}
 
-  /* 3D Signal Box */
-  .signal {
-    transform: rotateX(10deg) rotateY(-10deg);
-    background: linear-gradient(145deg, #111, #000);
-    padding: 30px;
-    border-radius: 25px;
-    box-shadow: 
-      20px 20px 40px #000,
-      -10px -10px 30px #222,
-      inset 0 0 20px #000;
-  }
+/* Train */
+.train {
+  position: absolute;
+  width: 120px;
+  height: 40px;
+  background: red;
+  border-radius: 5px;
+  top: calc(50% - 20px);
+  left: -150px;
+  box-shadow: 0 0 20px red;
+}
 
-  .light {
-    width: 90px;
-    height: 90px;
-    border-radius: 50%;
-    margin: 25px auto;
-    background: radial-gradient(circle, #222, #000);
-    box-shadow: inset 0 0 15px #000;
-    transition: all 0.5s ease;
-    position: relative;
-  }
+/* 3 trains different colors */
+.train2 { background: blue; box-shadow: 0 0 20px blue; top: calc(50% + 60px); }
+.train3 { background: green; box-shadow: 0 0 20px green; top: calc(50% - 100px); }
 
-  /* Glow + depth */
-  .light.active::before {
-    content: "";
-    position: absolute;
-    width: 140%;
-    height: 140%;
-    top: -20%;
-    left: -20%;
-    border-radius: 50%;
-    filter: blur(20px);
-    opacity: 0.7;
-  }
+/* Signal */
+.signal {
+  position: absolute;
+  right: 100px;
+  top: 30%;
+  width: 60px;
+  background: #111;
+  padding: 10px;
+  border-radius: 10px;
+}
 
-  .red.active {
-    background: radial-gradient(circle, #ff4d4d, #7a0000);
-    box-shadow: 0 0 50px #ff0000, inset 0 0 20px #000;
-  }
+.light {
+  width: 40px;
+  height: 40px;
+  margin: 10px auto;
+  border-radius: 50%;
+  background: #333;
+}
 
-  .red.active::before {
-    background: red;
-  }
+.red.active { background: red; box-shadow: 0 0 20px red; }
+.green.active { background: lime; box-shadow: 0 0 20px lime; }
 
-  .yellow.active {
-    background: radial-gradient(circle, #ffe066, #996c00);
-    box-shadow: 0 0 50px #ffd000, inset 0 0 20px #000;
-  }
+/* Gate */
+.gate {
+  position: absolute;
+  width: 200px;
+  height: 10px;
+  background: white;
+  top: 60%;
+  right: 150px;
+  transform-origin: left;
+  transition: 1s;
+}
 
-  .yellow.active::before {
-    background: yellow;
-  }
-
-  .green.active {
-    background: radial-gradient(circle, #00ffb3, #006644);
-    box-shadow: 0 0 50px #00ff95, inset 0 0 20px #000;
-  }
-
-  .green.active::before {
-    background: #00ff95;
-  }
-
-  /* Panel */
-  .panel {
-    text-align: center;
-    color: white;
-  }
-
-  .panel h1 {
-    margin-bottom: 20px;
-    font-size: 30px;
-  }
-
-  .timer {
-    font-size: 70px;
-    margin: 20px 0;
-    font-weight: bold;
-    text-shadow: 0 0 20px rgba(255,255,255,0.5);
-  }
-
-  .status {
-    font-size: 22px;
-    margin-bottom: 20px;
-    letter-spacing: 2px;
-  }
-
-  button {
-    padding: 12px 22px;
-    margin: 6px;
-    border: none;
-    border-radius: 12px;
-    cursor: pointer;
-    font-weight: bold;
-    transition: 0.3s;
-  }
-
-  .start { background: #00c853; color: white; }
-  .stop { background: #d50000; color: white; }
-  .reset { background: #2962ff; color: white; }
-
-  button:hover {
-    transform: scale(1.15);
-  }
+.down { transform: rotate(0deg); }
+.up { transform: rotate(-70deg); }
 
 </style>
 </head>
 
 <body>
 
-<div class="container">
+<div class="scene">
 
-  <!-- Signal -->
+  <div class="track"></div>
+
+  <div id="train1" class="train"></div>
+  <div id="train2" class="train train2"></div>
+  <div id="train3" class="train train3"></div>
+
   <div class="signal">
     <div id="red" class="light red"></div>
-    <div id="yellow" class="light yellow"></div>
     <div id="green" class="light green"></div>
   </div>
 
-  <!-- Panel -->
-  <div class="panel">
-    <h1>3D Traffic Control</h1>
-    <div class="timer" id="timer">10</div>
-    <div class="status" id="status">STOP</div>
-
-    <button class="start" onclick="start()">Start</button>
-    <button class="stop" onclick="stop()">Stop</button>
-    <button class="reset" onclick="reset()">Reset</button>
-  </div>
+  <div id="gate" class="gate up"></div>
 
 </div>
 
 <script>
-  const red = document.getElementById("red");
-  const yellow = document.getElementById("yellow");
-  const green = document.getElementById("green");
 
-  const timerDisplay = document.getElementById("timer");
-  const statusDisplay = document.getElementById("status");
+const red = document.getElementById("red");
+const green = document.getElementById("green");
+const gate = document.getElementById("gate");
 
-  let state = 0;
-  let timer = 10;
-  let interval;
-  let running = false;
+const trains = [
+  document.getElementById("train1"),
+  document.getElementById("train2"),
+  document.getElementById("train3")
+];
 
-  function updateUI() {
-    red.classList.remove("active");
-    yellow.classList.remove("active");
-    green.classList.remove("active");
+let currentTrain = 0;
 
-    if (state === 0) {
-      red.classList.add("active");
-      statusDisplay.innerText = "STOP";
-    } else if (state === 1) {
-      yellow.classList.add("active");
-      statusDisplay.innerText = "READY";
-    } else {
-      green.classList.add("active");
-      statusDisplay.innerText = "GO";
-    }
+/* Signal Control */
+function setSignal(isTrainComing) {
+  red.classList.remove("active");
+  green.classList.remove("active");
+
+  if (isTrainComing) {
+    red.classList.add("active");
+    gate.classList.remove("up");
+    gate.classList.add("down");
+  } else {
+    green.classList.add("active");
+    gate.classList.remove("down");
+    gate.classList.add("up");
   }
+}
 
-  function nextState() {
-    if (state === 0) {
-      state = 1;
-      timer = 5;
-    } else if (state === 1) {
-      state = 2;
-      timer = 10;
-    } else {
-      state = 0;
-      timer = 10;
-    }
-    updateUI();
-  }
+/* Move Train */
+function moveTrain(train) {
+  train.style.transition = "left 5s linear";
+  train.style.left = "120%";
 
-  function start() {
-    if (running) return;
-    running = true;
+  setTimeout(() => {
+    train.style.transition = "none";
+    train.style.left = "-150px";
+  }, 5000);
+}
 
-    updateUI();
-    timerDisplay.innerText = timer;
+/* Loop system */
+function runSystem() {
 
-    interval = setInterval(() => {
-      timer--;
-      timerDisplay.innerText = timer;
+  if (currentTrain >= trains.length) currentTrain = 0;
 
-      if (timer === 0) {
-        nextState();
-      }
-    }, 1000);
-  }
+  setSignal(true);
 
-  function stop() {
-    clearInterval(interval);
-    running = false;
-  }
+  setTimeout(() => {
+    moveTrain(trains[currentTrain]);
+  }, 1000);
 
-  function reset() {
-    stop();
-    state = 0;
-    timer = 10;
-    timerDisplay.innerText = timer;
-    statusDisplay.innerText = "STOP";
-    updateUI();
-  }
+  setTimeout(() => {
+    setSignal(false);
+  }, 6000);
 
-  updateUI();
+  currentTrain++;
+
+  setTimeout(runSystem, 8000);
+}
+
+runSystem();
+
 </script>
 
 </body>
