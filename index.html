@@ -2,13 +2,13 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>Fire Engine Level</title>
+<title>Fire Border</title>
 
 <style>
 body {
   margin: 0;
-  overflow: hidden;
   background: black;
+  overflow: hidden;
 }
 
 canvas {
@@ -25,20 +25,22 @@ canvas {
 const canvas = document.getElementById("canvas");
 const ctx = canvas.getContext("2d");
 
-canvas.width = window.innerWidth;
-canvas.height = window.innerHeight;
+function resize() {
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+}
+resize();
+window.addEventListener("resize", resize);
 
 let particles = [];
-let sparks = [];
-let lastX = 0;
 
-// 🔥 FIRE PARTICLE CLASS
+// 🔥 PARTICLE
 class Particle {
   constructor(x, y) {
     this.x = x;
     this.y = y;
     this.size = Math.random() * 6 + 2;
-    this.speedY = Math.random() * -3 - 1;
+    this.speedY = Math.random() * -2 - 1;
     this.speedX = (Math.random() - 0.5) * 2;
     this.life = 100;
   }
@@ -58,78 +60,38 @@ class Particle {
   }
 }
 
-// 💥 SPARK PARTICLES (Explosion)
-class Spark {
-  constructor(x, y) {
-    this.x = x;
-    this.y = y;
-    this.speedX = (Math.random() - 0.5) * 10;
-    this.speedY = (Math.random() - 0.5) * 10;
-    this.life = 60;
-  }
+// 🔥 CREATE BORDER FIRE
+function createBorderFire() {
+  let w = canvas.width;
+  let h = canvas.height;
 
-  update() {
-    this.x += this.speedX;
-    this.y += this.speedY;
-    this.life--;
-  }
-
-  draw() {
-    ctx.fillStyle = "white";
-    ctx.fillRect(this.x, this.y, 2, 2);
-  }
-}
-
-// 🔥 CREATE FIRE
-function createFire() {
   for (let i = 0; i < 5; i++) {
-    particles.push(new Particle(canvas.width / 2, canvas.height - 50));
+
+    // TOP
+    particles.push(new Particle(Math.random() * w, 0));
+
+    // BOTTOM
+    particles.push(new Particle(Math.random() * w, h));
+
+    // LEFT
+    particles.push(new Particle(0, Math.random() * h));
+
+    // RIGHT
+    particles.push(new Particle(w, Math.random() * h));
   }
 }
 
-// 💥 EXPLOSION
-function explode(x, y) {
-  for (let i = 0; i < 80; i++) {
-    sparks.push(new Spark(x, y));
-  }
-}
-
-// 📱 SHAKE DETECTION
-window.addEventListener("devicemotion", function(event) {
-  let acc = event.accelerationIncludingGravity;
-  let total = Math.abs(acc.x + acc.y + acc.z);
-
-  if (total > 30) {
-    explode(canvas.width / 2, canvas.height / 2);
-  }
-});
-
-// 👆 TOUCH EXPLOSION
-window.addEventListener("touchstart", (e) => {
-  let x = e.touches[0].clientX;
-  let y = e.touches[0].clientY;
-  explode(x, y);
-});
-
-// 🎬 ANIMATION LOOP
+// 🎬 LOOP
 function animate() {
-  ctx.fillStyle = "rgba(0,0,0,0.2)";
+  ctx.fillStyle = "rgba(0,0,0,0.3)";
   ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-  createFire();
+  createBorderFire();
 
-  // 🔥 Update fire
   particles.forEach((p, i) => {
     p.update();
     p.draw();
     if (p.life <= 0) particles.splice(i, 1);
-  });
-
-  // 💥 Update sparks
-  sparks.forEach((s, i) => {
-    s.update();
-    s.draw();
-    if (s.life <= 0) sparks.splice(i, 1);
   });
 
   requestAnimationFrame(animate);
