@@ -1,119 +1,141 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <title>Traffic Signal React</title>
+  <meta charset="UTF-8">
+  <title>Traffic Signal System</title>
 
-  <!-- React CDN -->
-  <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
-  <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+  <style>
+    body {
+      margin: 0;
+      background: #111;
+      color: white;
+      text-align: center;
+      font-family: Arial;
+    }
 
-  <!-- Babel (to use JSX in browser) -->
-  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    h1 {
+      margin-top: 40px;
+    }
+
+    .box {
+      width: 120px;
+      margin: 30px auto;
+      background: black;
+      padding: 15px;
+      border-radius: 10px;
+    }
+
+    .light {
+      width: 90px;
+      height: 90px;
+      margin: 15px auto;
+      border-radius: 50%;
+      background: grey;
+      transition: 0.3s;
+    }
+
+    .red.on {
+      background: red;
+      box-shadow: 0 0 20px red;
+    }
+
+    .yellow.on {
+      background: yellow;
+      box-shadow: 0 0 20px yellow;
+    }
+
+    .green.on {
+      background: green;
+      box-shadow: 0 0 20px green;
+    }
+
+    .buttons button {
+      margin: 10px;
+      padding: 10px 15px;
+      border: none;
+      cursor: pointer;
+      border-radius: 5px;
+    }
+  </style>
 </head>
 
 <body>
 
-  <div id="root"></div>
+  <h1>🚦 Traffic Signal System</h1>
 
-  <script type="text/babel">
+  <div class="box">
+    <div id="red" class="light red"></div>
+    <div id="yellow" class="light yellow"></div>
+    <div id="green" class="light green"></div>
+  </div>
 
-    const { useState, useEffect } = React;
+  <h2 id="status">RED</h2>
+  <h3 id="timer">Time Left: 5s</h3>
 
-    function App() {
-      const [light, setLight] = useState("red");
-      const [time, setTime] = useState(5);
+  <div class="buttons">
+    <button onclick="setLight('red')">Red</button>
+    <button onclick="setLight('yellow')">Yellow</button>
+    <button onclick="setLight('green')">Green</button>
+  </div>
 
-      // traffic logic
-      useEffect(() => {
-        let timer;
+  <script>
+    let current = "red";
+    let time = 5;
+    let countdown;
 
-        if (light === "red") {
-          setTime(5);
-          timer = setTimeout(() => setLight("green"), 5000);
-        } else if (light === "green") {
-          setTime(4);
-          timer = setTimeout(() => setLight("yellow"), 4000);
-        } else {
-          setTime(2);
-          timer = setTimeout(() => setLight("red"), 2000);
-        }
+    function updateUI() {
+      document.getElementById("red").classList.remove("on");
+      document.getElementById("yellow").classList.remove("on");
+      document.getElementById("green").classList.remove("on");
 
-        return () => clearTimeout(timer);
-      }, [light]);
-
-      // countdown
-      useEffect(() => {
-        if (time === 0) return;
-
-        const interval = setInterval(() => {
-          setTime((prev) => prev - 1);
-        }, 1000);
-
-        return () => clearInterval(interval);
-      }, [time]);
-
-      return (
-        <div style={styles.app}>
-          <h1>🚦 Traffic Signal</h1>
-
-          <div style={styles.box}>
-            <div style={{ ...styles.light, ...(light === "red" ? styles.red : {}) }}></div>
-            <div style={{ ...styles.light, ...(light === "yellow" ? styles.yellow : {}) }}></div>
-            <div style={{ ...styles.light, ...(light === "green" ? styles.green : {}) }}></div>
-          </div>
-
-          <h2>{light.toUpperCase()}</h2>
-          <h3>Time Left: {time}s</h3>
-
-          <div>
-            <button onClick={() => setLight("red")}>Red</button>
-            <button onClick={() => setLight("yellow")}>Yellow</button>
-            <button onClick={() => setLight("green")}>Green</button>
-          </div>
-        </div>
-      );
+      document.getElementById(current).classList.add("on");
+      document.getElementById("status").innerText = current.toUpperCase();
+      document.getElementById("timer").innerText = "Time Left: " + time + "s";
     }
 
-    const styles = {
-      app: {
-        textAlign: "center",
-        background: "#111",
-        color: "white",
-        height: "100vh",
-        paddingTop: "50px"
-      },
-      box: {
-        width: "120px",
-        margin: "20px auto",
-        background: "black",
-        padding: "15px",
-        borderRadius: "10px"
-      },
-      light: {
-        width: "90px",
-        height: "90px",
-        margin: "15px auto",
-        borderRadius: "50%",
-        background: "grey"
-      },
-      red: {
-        background: "red",
-        boxShadow: "0 0 20px red"
-      },
-      yellow: {
-        background: "yellow",
-        boxShadow: "0 0 20px yellow"
-      },
-      green: {
-        background: "green",
-        boxShadow: "0 0 20px green"
+    function nextLight() {
+      if (current === "red") {
+        current = "green";
+        time = 4;
+      } else if (current === "green") {
+        current = "yellow";
+        time = 2;
+      } else {
+        current = "red";
+        time = 5;
       }
-    };
 
-    const root = ReactDOM.createRoot(document.getElementById("root"));
-    root.render(<App />);
+      startCycle();
+    }
 
+    function startCycle() {
+      clearInterval(countdown);
+
+      updateUI();
+
+      countdown = setInterval(() => {
+        time--;
+        updateUI();
+
+        if (time === 0) {
+          clearInterval(countdown);
+          nextLight();
+        }
+      }, 1000);
+    }
+
+    function setLight(color) {
+      current = color;
+
+      if (color === "red") time = 5;
+      else if (color === "green") time = 4;
+      else time = 2;
+
+      startCycle();
+    }
+
+    // start automatically
+    startCycle();
   </script>
 
 </body>
