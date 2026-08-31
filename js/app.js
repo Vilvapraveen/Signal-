@@ -8,6 +8,7 @@ const products = [
 function loadProducts() {
   const container = document.getElementById("products");
 
+  
   container.innerHTML = products.map(p => `
     <div class="card">
       <h3>${p.name}</h3>
