@@ -34,3 +34,4 @@ function addToCart(id) {
 
   alert("Added to cart");
 }
+
